@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d0aaf2d0-0898-476f-8c3d-4afe66f8462b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="OptimizeOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2Xj9kGXWd0YmliGzksIRAFDiDKp" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/jeffersonmoraes/Documents/projects/guinhow01/migracao-mysql-postgres/node_modules/prettier&quot;,
+    &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.prettier&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/jeffersonmoraes/Documents/projects/guinhow01/migracao-mysql-postgres/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="4" Folder0="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary" Folder1="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary" Folder2="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary" Folder3="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary" CustomDictionaries="4" CustomDictionary0="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary/portuguese-brazil.dic" CustomDictionary1="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary/portuguese-brazil_technical-terms.dic" CustomDictionary2="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary/portuguese-brazil_technical-terms_without-accents.dic" CustomDictionary3="$PROJECT_DIR$/../../libs/webstorm/IntelliJ.Portuguese.Brazil.Dictionary/portuguese-brazil_without-accents.dic" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d0aaf2d0-0898-476f-8c3d-4afe66f8462b" name="Changes" comment="" />
+      <created>1699131763166</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1699131763166</updated>
+      <workItem from="1699131765907" duration="2083000" />
+      <workItem from="1699133935644" duration="1000" />
+      <workItem from="1699133944520" duration="402000" />
+      <workItem from="1699138462152" duration="1377000" />
+      <workItem from="1699140967045" duration="65000" />
+      <workItem from="1699141551943" duration="752000" />
+      <workItem from="1699142403781" duration="1497000" />
+      <workItem from="1699550846628" duration="3685000" />
+      <workItem from="1699560106538" duration="6473000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
