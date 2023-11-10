@@ -135,7 +135,13 @@ async function createPostgresForeignKeys(postgresClient: Client, foreignKeys: Fo
   try {
     await postgresClient.query('BEGIN');
 
-    for (const key of foreignKeys) {
+    for (const chave of foreignKeys) {
+      const key: any = Object.keys(chave).reduce((newObj, k) => {
+        // @ts-ignore
+        newObj[k.toLowerCase()] = chave[k];
+        return newObj;
+      }, {});
+
       const fkExistsQuery = `
         SELECT 1
         FROM information_schema.table_constraints
@@ -238,40 +244,48 @@ async function insertData (mysqlConnection: mysql.Connection, postgresClient: Cl
 
   const primaryKeyColumns = mysqlIndexes.filter(index => index.Key_name === 'PRIMARY').map(index => index.Column_name);
 
-  const [rows] = await mysqlConnection.execute(`SELECT * FROM ${tableName}`) as unknown as [any[]];
-  // Desativa as verificações de FK para a sessão atual
-  await postgresClient.query("SET session_replication_role = 'replica';");
+  const execute = async (offset: number, limit: number) => {
+    console.info('Buscando dados da tabela', tableName, 'offset', offset, 'limit', limit)
+    const [rows] = await mysqlConnection.execute(`SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`) as unknown as [any[]];
+    // Desativa as verificações de FK para a sessão atual
+    await postgresClient.query("SET session_replication_role = 'replica';");
 
-  console.info('Inserindo dados na tabela', tableName)
-  const promiseList = []
-  for (const row of rows) {
-    const insertColumns = Object.keys(row).map(key => `"${key}"`).join(', ');
-    const placeholders = Object.keys(row).map((_, index) => `$${index + 1}`).join(', ');
-    const primaryKey = primaryKeyColumns.map(col => `"${col}"`).join(', ');
+    console.info('Inserindo dados na tabela', tableName)
+    const promiseList = []
+    for (const row of rows) {
+      const insertColumns = Object.keys(row).map(key => `"${key}"`).join(', ');
+      const placeholders = Object.keys(row).map((_, index) => `$${index + 1}`).join(', ');
+      const primaryKey = primaryKeyColumns.map(col => `"${col}"`).join(', ');
 
-    // A cláusula ON CONFLICT é utilizada aqui para ignorar a inserção caso a entrada já exista
-    // Assumindo que você tenha uma coluna ou um conjunto de colunas que defina(m) a unicidade da linha
-    let insertQuery
-    if (primaryKey) {
-       insertQuery = `
+      // A cláusula ON CONFLICT é utilizada aqui para ignorar a inserção caso a entrada já exista
+      // Assumindo que você tenha uma coluna ou um conjunto de colunas que defina(m) a unicidade da linha
+      let insertQuery
+      if (primaryKey) {
+        insertQuery = `
         INSERT INTO "${tableName}" (${insertColumns}) 
         VALUES (${placeholders})
         ON CONFLICT (${primaryKey}) DO NOTHING;
       `;
-    } else {
-      insertQuery = `
+      } else {
+        insertQuery = `
         INSERT INTO "${tableName}" (${insertColumns}) 
         VALUES (${placeholders})
         ON CONFLICT DO NOTHING;
       `;
+      }
+
+      const rowValues = Object.values(row).map((value) => getValue(value));
+
+      const p = postgresClient.query(insertQuery, rowValues);
+      promiseList.push(p)
     }
+    await Promise.all(promiseList)
 
-    const rowValues = Object.values(row).map((value) => getValue(value));
-
-    const p = postgresClient.query(insertQuery, rowValues);
-    promiseList.push(p)
+    if (rows.length === limit) {
+      await execute(offset + limit, limit)
+    }
   }
-  await Promise.all(promiseList)
+  await execute(0, 100)
 
   // Reativa as verificações de FK para a sessão atual
   await postgresClient.query("SET session_replication_role = 'origin';");
