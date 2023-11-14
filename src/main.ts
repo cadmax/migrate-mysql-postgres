@@ -3,6 +3,7 @@ import { Client } from 'pg';
 
 interface MySQLConfig {
   host: string;
+  port: number;
   user: string;
   password: string;
   database: string;
@@ -14,11 +15,15 @@ interface PostgresConfig {
   password: string;
   database: string;
   port: number;
+  ssl?: {
+    rejectUnauthorized: boolean;
+  }
 }
 
 interface TableColumn {
   Field: string;
   Type: string;
+  Extra: string;
 }
 
 
@@ -41,6 +46,7 @@ const mysqlConfig: MySQLConfig = {
   user: 'root',
   password: 'root',
   database: 'users',
+  port: 3306
 };
 
 const postgresConfig: PostgresConfig = {
@@ -49,9 +55,12 @@ const postgresConfig: PostgresConfig = {
   password: 'postgres',
   database: 'users',
   port: 5432,
+   // ssl: {
+   //   rejectUnauthorized: false
+   // }
 };
 
-function mysqlTypeToPostgresType(mysqlType: string) {
+function mysqlTypeToPostgresType(mysqlType: string, columnExtra: string): string {
   // Remove qualquer coisa entre parênteses incluindo os próprios parênteses e 'unsigned'
   const typeWithoutLength = mysqlType
     .replace(/\(\d+\)/, '')
@@ -67,6 +76,16 @@ function mysqlTypeToPostgresType(mysqlType: string) {
 
   if (mysqlType.toLowerCase().includes('char')) {
     return 'VARCHAR';
+  }
+
+  if (columnExtra.toLowerCase().includes('auto_increment')) {
+    if (typeWithoutLength.toLowerCase() === 'bigint') {
+      return 'BIGSERIAL';
+    } else if (typeWithoutLength.toLowerCase() === 'int') {
+      return 'SERIAL';
+    } else {
+      throw new Error(`Tipo não suportado para auto_increment: ${mysqlType}`);
+    }
   }
 
   switch (typeWithoutLength.toLowerCase()) {
@@ -94,6 +113,8 @@ function mysqlTypeToPostgresType(mysqlType: string) {
       return 'TEXT';
     case 'char':
       return 'CHAR';
+    case 'json':
+      return 'JSON';
     case 'enum':
     case 'varchar':
       return 'VARCHAR'; // Se necessário, adicione um tamanho específico para VARCHAR
@@ -153,7 +174,7 @@ async function createPostgresForeignKeys(postgresClient: Client, foreignKeys: Fo
 
       // Se a chave estrangeira não existir, cria uma nova
       if (fkExistsResult.rows.length > 0) {
-        console.log(`Chave estrangeira '${key.constraint_name}' já existe na tabela '${key.table_name}'.`);
+        console.info(`Chave estrangeira '${key.constraint_name}' já existe na tabela '${key.table_name}'.`);
         continue;
       }
 
@@ -229,10 +250,9 @@ async function createTable (mysqlConnection: mysql.Connection, postgresClient: C
   const [columns] = await mysqlConnection.execute(`DESCRIBE ${tableName}`) as unknown as [TableColumn[]];
 
   const columnDefinitions = columns.map(column => {
-    const columnType = mysqlTypeToPostgresType(column.Type);
+    const columnType = mysqlTypeToPostgresType(column.Type, column.Extra);
     return `"${column.Field}" ${columnType}`;
   }).join(', ')
-
 
   const createTableQuery = `CREATE TABLE IF NOT EXISTS "${tableName}" (${columnDefinitions});`;
 
@@ -244,14 +264,14 @@ async function insertData (mysqlConnection: mysql.Connection, postgresClient: Cl
 
   const primaryKeyColumns = mysqlIndexes.filter(index => index.Key_name === 'PRIMARY').map(index => index.Column_name);
 
+  await postgresClient.query("SET session_replication_role = 'replica';");
   const execute = async (offset: number, limit: number) => {
     console.info('Buscando dados da tabela', tableName, 'offset', offset, 'limit', limit)
     const [rows] = await mysqlConnection.execute(`SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`) as unknown as [any[]];
     // Desativa as verificações de FK para a sessão atual
-    await postgresClient.query("SET session_replication_role = 'replica';");
 
     console.info('Inserindo dados na tabela', tableName)
-    const promiseList = []
+    const promiseList: any[] = []
     for (const row of rows) {
       const insertColumns = Object.keys(row).map(key => `"${key}"`).join(', ');
       const placeholders = Object.keys(row).map((_, index) => `$${index + 1}`).join(', ');
@@ -285,12 +305,13 @@ async function insertData (mysqlConnection: mysql.Connection, postgresClient: Cl
       await execute(offset + limit, limit)
     }
   }
-  await execute(0, 100)
+  await execute(0, 1000)
+
 
   // Reativa as verificações de FK para a sessão atual
   await postgresClient.query("SET session_replication_role = 'origin';");
 
-  console.log(`Tabela '${tableName}' migrada para o PostgreSQL.`);
+  console.info(`Tabela '${tableName}' migrada para o PostgreSQL.`);
 }
 
 
@@ -341,7 +362,7 @@ async function migrateData(): Promise<void> {
       await insertData(mysqlConnection, postgresClient, tableName)
     }
 
-    console.log('Migração concluída.');
+    console.info('Migração concluída.');
   } catch (err) {
     await postgresClient.query('ROLLBACK');
     console.error('Erro durante a migração, alterações desfeitas:', err);
