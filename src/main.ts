@@ -55,9 +55,9 @@ const postgresConfig: PostgresConfig = {
   password: 'postgres',
   database: 'users',
   port: 5432,
-   // ssl: {
-   //   rejectUnauthorized: false
-   // }
+  // ssl: {
+  //  rejectUnauthorized: false
+  // }
 };
 
 function mysqlTypeToPostgresType(mysqlType: string, columnExtra: string): string {
@@ -261,56 +261,44 @@ async function createTable (mysqlConnection: mysql.Connection, postgresClient: C
 
 async function insertData (mysqlConnection: mysql.Connection, postgresClient: Client, tableName: string): Promise<void> {
   const mysqlIndexes = await getMysqlTableIndexes(mysqlConnection, tableName);
-
   const primaryKeyColumns = mysqlIndexes.filter(index => index.Key_name === 'PRIMARY').map(index => index.Column_name);
 
-  await postgresClient.query("SET session_replication_role = 'replica';");
+  const batchSize = 1000; // Tamanho de lote
+
   const execute = async (offset: number, limit: number) => {
     console.info('Buscando dados da tabela', tableName, 'offset', offset, 'limit', limit)
     const [rows] = await mysqlConnection.execute(`SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`) as unknown as [any[]];
-    // Desativa as verificações de FK para a sessão atual
 
-    console.info('Inserindo dados na tabela', tableName)
-    const promiseList: any[] = []
-    for (const row of rows) {
-      const insertColumns = Object.keys(row).map(key => `"${key}"`).join(', ');
-      const placeholders = Object.keys(row).map((_, index) => `$${index + 1}`).join(', ');
-      const primaryKey = primaryKeyColumns.map(col => `"${col}"`).join(', ');
+    if (rows.length > 0) {
+      console.info('Inserindo dados na tabela', tableName);
 
-      // A cláusula ON CONFLICT é utilizada aqui para ignorar a inserção caso a entrada já exista
-      // Assumindo que você tenha uma coluna ou um conjunto de colunas que defina(m) a unicidade da linha
-      let insertQuery
-      if (primaryKey) {
-        insertQuery = `
-        INSERT INTO "${tableName}" (${insertColumns}) 
-        VALUES (${placeholders})
-        ON CONFLICT (${primaryKey}) DO NOTHING;
-      `;
-      } else {
-        insertQuery = `
-        INSERT INTO "${tableName}" (${insertColumns}) 
-        VALUES (${placeholders})
-        ON CONFLICT DO NOTHING;
-      `;
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        const insertColumns = Object.keys(rows[0]).map(key => `"${key}"`).join(', ');
+
+        let placeholderIndex = 1;
+        const insertValues = batch.map(row => {
+          const placeholders = Object.keys(row).map(() => `$${placeholderIndex++}`).join(', ');
+          return `(${placeholders})`;
+        }).join(', ');
+
+        const primaryKey = primaryKeyColumns.map(col => `"${col}"`).join(', ');
+        let conflictClause = primaryKey ? `ON CONFLICT (${primaryKey}) DO NOTHING` : 'ON CONFLICT DO NOTHING';
+
+        let insertQuery = `INSERT INTO "${tableName}" (${insertColumns}) VALUES ${insertValues} ${conflictClause};`;
+
+        const rowValues = batch.flatMap(row => Object.values(row).map(getValue));
+
+        await postgresClient.query(insertQuery, rowValues);
       }
 
-      const rowValues = Object.values(row).map((value) => getValue(value));
-
-      const p = postgresClient.query(insertQuery, rowValues);
-      promiseList.push(p)
-    }
-    await Promise.all(promiseList)
-
-    if (rows.length === limit) {
-      await execute(offset + limit, limit)
+      if (rows.length === limit) {
+        await execute(offset + limit, limit);
+      }
     }
   }
-  await execute(0, 1000)
 
-
-  // Reativa as verificações de FK para a sessão atual
-  await postgresClient.query("SET session_replication_role = 'origin';");
-
+  await execute(0, 1000);
   console.info(`Tabela '${tableName}' migrada para o PostgreSQL.`);
 }
 
@@ -333,13 +321,19 @@ async function migrateData(): Promise<void> {
 
     const [tables] = await mysqlConnection.execute(`SHOW TABLES`) as unknown as [any[]];
 
-    for (const tableRow of tables) {
+    for await (const tableRow of tables) {
       const tableName = tableRow[`Tables_in_${mysqlConfig.database}`];
       if (skipTables.includes(tableName)) continue;
 
+      console.info('Criando tabela', tableName)
       await createTable(mysqlConnection, postgresClient, tableName)
+    }
 
-      // Migrar índices
+    for await (const tableRow of tables) {
+      const tableName = tableRow[`Tables_in_${mysqlConfig.database}`];
+      if (skipTables.includes(tableName)) continue;
+
+      console.info('Criando indexes', tableName)
       const mysqlIndexes = await getMysqlTableIndexes(mysqlConnection, tableName);
 
       await createPostgresIndexes(postgresClient, tableName, mysqlIndexes);
@@ -352,15 +346,26 @@ async function migrateData(): Promise<void> {
 
       if (skipTables.includes(tableName)) continue;
 
+       console.info('Criando chaves estrangeiras da tabela', tableName)
+
        await createFks(mysqlConnection, postgresClient, tableName)
     }
 
+    await postgresClient.query('BEGIN');
+    await postgresClient.query("SET session_replication_role = 'replica';");
+
     for (const tableRow of tables) {
       const tableName = tableRow[`Tables_in_${mysqlConfig.database}`];
+
       if (skipTables.includes(tableName)) continue;
+
+      console.info('Inserindo dados da tabela', tableName)
 
       await insertData(mysqlConnection, postgresClient, tableName)
     }
+
+    await postgresClient.query("SET session_replication_role = 'origin';");
+    await postgresClient.query('COMMIT');
 
     console.info('Migração concluída.');
   } catch (err) {

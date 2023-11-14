@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d0aaf2d0-0898-476f-8c3d-4afe66f8462b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="d0aaf2d0-0898-476f-8c3d-4afe66f8462b" name="Changes" comment="fix: serial type column">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.ts" afterDir="false" />
     </list>
@@ -16,6 +15,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
   </component>
   <component name="OptimizeOnSaveOptions">
     <option name="myRunOnSave" value="true" />
@@ -74,11 +76,26 @@
       <workItem from="1699639875189" duration="4909000" />
       <workItem from="1699967238229" duration="1000" />
       <workItem from="1699967246103" duration="1403000" />
-      <workItem from="1699974590406" duration="2390000" />
+      <workItem from="1699974590406" duration="2470000" />
+      <workItem from="1699981242016" duration="759000" />
+      <workItem from="1699982999403" duration="5566000" />
     </task>
+    <task id="LOCAL-00001" summary="fix: serial type column">
+      <option name="closed" value="true" />
+      <created>1699980035305</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1699980035305</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix: serial type column" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: serial type column" />
   </component>
 </project>
